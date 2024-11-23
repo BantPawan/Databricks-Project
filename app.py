@@ -1,99 +1,58 @@
-import streamlit as st
-import joblib
 import os
 import shutil
-from azure.storage.blob import BlobServiceClient
+import requests
+from pyspark.ml import PipelineModel
+import streamlit as st
 
-# Azure Storage Connection Settings
-CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=nycdemov1;AccountKey=KQVhKXYfyjKTg4ZNQjxIDyOXkhOEpGvdgP6Dq8A8jwgzIZ9N9hNLwj5yig4hoa+eaDtqi95kj+FP+AStXe5FiA==;EndpointSuffix=core.windows.net"
-CONTAINER_NAME = "nycdatabrick"
+# URL to the model in Azure Blob Storage
+MODEL_URL = "https://nycdemov1.blob.core.windows.net/nycdatabrick/models/random_forest_model.zip"
 
-# Define Model Paths
-DBFS_MODEL_DIR = "/dbfs/tmp/random_forest_model"
-LOCAL_MODEL_DIR = "/tmp/random_forest_model"
-DBFS_MODEL_ZIP_PATH = "/dbfs/tmp/random_forest_model.zip"
-LOCAL_MODEL_ZIP_PATH = "/tmp/random_forest_model.zip"
-PARAMS_BLOB_NAME = "models/random_forest_model_params.pkl"
-MODEL_BLOB_NAME = "models/random_forest_model.zip"
+# Local paths in Streamlit
+local_model_dir = "random_forest_model"
+local_zip_path = f"{local_model_dir}.zip"
 
-# Streamlit App
-st.title("Random Forest Model Management")
+# Download the model zip
+st.write("Downloading model from Azure Blob Storage...")
+response = requests.get(MODEL_URL, stream=True)
+with open(local_zip_path, 'wb') as f:
+    shutil.copyfileobj(response.raw, f)
 
-# Upload Model Feature Importances
-st.header("Upload Feature Importances")
+# Extract the zip file
+st.write("Extracting model files...")
+shutil.unpack_archive(local_zip_path, local_model_dir)
 
-# Azure Blob Client Initialization
-blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+# Load the model
+st.write("Loading the model...")
+model_path = os.path.join(local_model_dir, "random_forest_model")  # Adjust path if needed
+loaded_model = PipelineModel.load(model_path)
 
-# Load Feature Importances
-try:
-    params_file_path = f"{DBFS_MODEL_DIR}/params.pkl"
-    if os.path.exists(params_file_path):
-        feature_importances = joblib.load(params_file_path)
-        st.success("Feature importances loaded successfully!")
-        st.write("Feature Importances:", feature_importances)
-    else:
-        st.warning("Feature importance file not found.")
-except Exception as e:
-    st.error(f"Error loading feature importances: {e}")
+st.success("Model loaded successfully!")
 
-# Upload Feature Importances to Azure Blob
-if st.button("Upload Feature Importances to Azure"):
-    try:
-        # Blob Client
-        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=PARAMS_BLOB_NAME)
-        
-        # Upload the file
-        with open(params_file_path, "rb") as data:
-            blob_client.upload_blob(data, overwrite=True)
-        st.success(f"Feature importances uploaded successfully to: {CONTAINER_NAME}/{PARAMS_BLOB_NAME}")
-    except Exception as e:
-        st.error(f"Error uploading feature importances: {e}")
+# Streamlit UI for predictions
+st.title("Price Prediction App")
 
-# Upload Model Pipeline to Azure
-st.header("Upload Random Forest Model")
+# User inputs
+passenger_count = st.number_input("Passenger Count", min_value=1, max_value=10, value=1)
+payment_type = st.selectbox("Payment Type", ["Credit Card", "Cash", "Other"])
+trip_duration = st.number_input("Trip Duration (minutes)", min_value=1, value=20)
+distance_km = st.number_input("Distance (km)", min_value=0.0, value=5.0)
+pickup_borough = st.selectbox("Pickup Borough", ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"])
+dropoff_borough = st.selectbox("Dropoff Borough", ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"])
 
-# Display Extracted Model Files
-if os.path.exists(DBFS_MODEL_DIR):
-    st.write("Available Model Files:")
-    model_files = os.listdir(DBFS_MODEL_DIR)
-    st.write(model_files)
-else:
-    st.warning("Model directory not found.")
-
-# Zip and Upload Model
-if st.button("Zip and Upload Model to Azure"):
-    try:
-        # Clean Local Directory
-        if os.path.exists(LOCAL_MODEL_DIR):
-            shutil.rmtree(LOCAL_MODEL_DIR)
-
-        # Copy and Zip Model Directory
-        shutil.copytree(DBFS_MODEL_DIR, LOCAL_MODEL_DIR)
-        shutil.make_archive(LOCAL_MODEL_ZIP_PATH.replace(".zip", ""), "zip", LOCAL_MODEL_DIR)
-
-        # Move Zip to DBFS Path
-        shutil.move(LOCAL_MODEL_ZIP_PATH, DBFS_MODEL_ZIP_PATH)
-
-        # Upload to Azure
-        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=MODEL_BLOB_NAME)
-        with open(DBFS_MODEL_ZIP_PATH, "rb") as model_zip:
-            blob_client.upload_blob(model_zip, overwrite=True)
-
-        st.success(f"Model uploaded successfully to Azure Blob: {CONTAINER_NAME}/{MODEL_BLOB_NAME}")
-    except Exception as e:
-        st.error(f"Error zipping or uploading model: {e}")
-
-# Download Model from Azure
-st.header("Download Model from Azure")
-if st.button("Download Model from Azure"):
-    try:
-        # Blob Client
-        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=MODEL_BLOB_NAME)
-
-        # Download the file
-        with open(LOCAL_MODEL_ZIP_PATH, "wb") as file:
-            file.write(blob_client.download_blob().readall())
-        st.success("Model downloaded successfully!")
-    except Exception as e:
-        st.error(f"Error downloading model: {e}")
+# Predict button
+if st.button("Predict"):
+    # Initialize Spark session
+    from pyspark.sql import SparkSession
+    spark = SparkSession.builder.appName("StreamlitApp").getOrCreate()
+    
+    # Prepare input data
+    data = [(passenger_count, payment_type, trip_duration, distance_km, pickup_borough, dropoff_borough)]
+    columns = ["passenger_count", "payment_type", "trip_duration", "distance_km", "pickup_borough", "dropoff_borough"]
+    input_df = spark.createDataFrame(data, columns)
+    
+    # Perform prediction
+    predictions = loaded_model.transform(input_df)
+    predicted_price = predictions.select("prediction").collect()[0]["prediction"]
+    
+    # Show result
+    st.success(f"Predicted Price: ${predicted_price:.2f}")
