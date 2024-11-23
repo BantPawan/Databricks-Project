@@ -1,92 +1,109 @@
 import os
-import shutil
-import requests
-from pyspark.ml import PipelineModel
 import streamlit as st
+from azure.storage.blob import BlobServiceClient
+from pyspark.ml import PipelineModel
 from pyspark.sql import SparkSession
 
-# URL to the model in Azure Blob Storage
-MODEL_URL = "https://nycdemov1.blob.core.windows.net/nycdatabrick/models/random_forest_model.zip"
+STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')  # Use environment variable for security
+CONTAINER_NAME = "nycdatabrick"
+BLOB_NAME = "random_forest_model"
+MODEL_LOCAL_PATH = "random_forest_model"
 
-# Local paths in Streamlit
-local_model_dir = "random_forest_model"
-local_zip_path = f"{local_model_dir}.zip"
+# Ensure environment variable is set
+if not STORAGE_CONNECTION_STRING:
+    st.error("Azure Storage Connection String is not set. Please configure it in the Azure portal.")
+else:
+    def download_model():
+        try:
+            st.info("Downloading model from Azure Blob Storage...")
+            blob_service_client = BlobServiceClient.from_connection_string(STORAGE_CONNECTION_STRING)
+            blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
 
-import os
-os.environ["JAVA_HOME"] = "C:\\Java\\jdk"  # Set your JAVA_HOME path
+            with open(MODEL_LOCAL_PATH, "wb") as model_file:
+                model_file.write(blob_client.download_blob().readall())
+            st.success("Model downloaded successfully!")
+        except Exception as e:
+            st.error(f"Error downloading model: {e}")
 
-from pyspark.sql import SparkSession
-spark = SparkSession.builder.appName("StreamlitApp").getOrCreate()
+    @st.cache_resource
+    def init_spark_session():
+        return SparkSession.builder.appName("ModelPrediction").getOrCreate()
 
-
-# Download the model zip
-def download_model():
-    st.write("Downloading model from Azure Blob Storage...")
-    try:
-        response = requests.get(MODEL_URL, stream=True)
-        if response.status_code == 200:
-            with open(local_zip_path, 'wb') as f:
-                shutil.copyfileobj(response.raw, f)
-            st.write("Model downloaded successfully.")
+    @st.cache_resource
+    def load_model():
+        # Download the model
+        model_path = download_model()
+        if os.path.exists(MODEL_LOCAL_PATH):
+            try:
+                # Load the model
+                return PipelineModel.load(MODEL_LOCAL_PATH)
+            except Exception as e:
+                st.error(f"Error loading model: {e}")
+                return None
         else:
-            st.error("Failed to download model. Please check the URL or network connection.")
-    except Exception as e:
-        st.error(f"An error occurred while downloading the model: {e}")
+            st.error("Failed to load the model. Check if it was downloaded correctly.")
+            return None
 
-# Extract the zip file
-def extract_model():
-    st.write("Extracting model files...")
-    try:
-        shutil.unpack_archive(local_zip_path, local_model_dir)
-        st.write("Model extracted successfully.")
-    except Exception as e:
-        st.error(f"Error extracting the model: {e}")
-
-# Load the model
-def load_model():
-    try:
-        model_path = os.path.join(local_model_dir, "random_forest_model")  # Adjust path if needed
-        loaded_model = PipelineModel.load(model_path)
-        return loaded_model
-    except Exception as e:
-        st.error(f"Error loading the model: {e}")
-        return None
-
-# Streamlit UI for predictions
-st.title("Price Prediction App")
-
-# Display loading steps
-if not os.path.exists(local_model_dir):
-    download_model()
-    extract_model()
-
-# Load the model
-if 'model' not in st.session_state:
+    spark = init_spark_session()
     model = load_model()
-    if model:
-        st.session_state.model = model
 
-# User inputs
-passenger_count = st.number_input("Passenger Count", min_value=1, max_value=10, value=1)
-payment_type = st.selectbox("Payment Type", ["Credit Card", "Cash", "Other"])
-trip_duration = st.number_input("Trip Duration (minutes)", min_value=1, value=20)
-distance_km = st.number_input("Distance (km)", min_value=0.0, value=5.0)
-pickup_borough = st.selectbox("Pickup Borough", ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"])
-dropoff_borough = st.selectbox("Dropoff Borough", ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"])
+    st.title("Taxi Fare Prediction")
 
-# Predict button
+    # (Rest of the Streamlit code for input fields and predictions remains the same)
+
+
+# Streamlit UI
+st.title("Taxi Fare Prediction")
+
+# Input fields for user data
+st.sidebar.header("Enter Trip Details:")
+passenger_count = st.number_input(
+    "Passenger Count", min_value=1, max_value=6, value=1, help="Number of passengers for the trip"
+)
+payment_type = st.sidebar.selectbox(
+    "Payment Type", [1, 2], help="1 for Card, 2 for Cash"
+)
+trip_duration = st.number_input(
+    "Trip Duration (minutes)", min_value=1, step=1, help="Duration of the trip in minutes"
+)
+distance_km = st.number_input(
+    "Distance (km)", min_value=0.0, step=0.1, help="Distance of the trip in kilometers"
+)
+pickup_day_of_week = st.selectbox(
+    "Pickup Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+)
+pickup_hour = st.slider("Pickup Hour", 0, 23, value=12, help="Hour of the day for pickup (0-23)")
+pickup_month = st.slider("Pickup Month", 1, 12, value=1, help="Month of the year for pickup")
+pickup_borough = st.selectbox(
+    "Pickup Borough", ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"]
+)
+dropoff_borough = st.selectbox(
+    "Dropoff Borough", ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"]
+)
+is_holiday = st.selectbox("Is Holiday?", ["Yes", "No"])
+distance_bin = st.sidebar.selectbox("Distance Bin", ["Short", "Medium", "Long"], index=1)
+time_of_day_bin = st.sidebar.selectbox("Time of Day Bin", ["Morning", "Afternoon", "Evening", "Night"], index=0)
+near_airport = st.sidebar.selectbox("Near Airport?", ["Yes", "No"])
+
+# Create a DataFrame for the input query
+single_query = [(passenger_count, payment_type, trip_duration, distance_km, 
+                 pickup_day_of_week, pickup_hour, pickup_month, pickup_borough, 
+                 dropoff_borough, is_holiday, distance_bin, time_of_day_bin, near_airport)]
+
+columns = [
+    "passenger_count", "payment_type", "trip_duration", "distance_km",
+    "pickup_day_of_week", "pickup_hour", "pickup_month", "pickup_borough", 
+    "dropoff_borough", "is_holiday", "distance_bin", "time_of_day_bin", "near_airport"
+]
+
+test_data_df = spark.createDataFrame(single_query, columns)
+
+# Show the input data
+st.write("Input Data:")
+st.dataframe(test_data_df.toPandas())
+
+# Make predictions
 if st.button("Predict"):
-    if 'model' in st.session_state:
-        # Prepare input data
-        data = [(passenger_count, payment_type, trip_duration, distance_km, pickup_borough, dropoff_borough)]
-        columns = ["passenger_count", "payment_type", "trip_duration", "distance_km", "pickup_borough", "dropoff_borough"]
-        input_df = spark.createDataFrame(data, columns)
-
-        # Perform prediction
-        predictions = st.session_state.model.transform(input_df)
-        predicted_price = predictions.select("prediction").collect()[0]["prediction"]
-        
-        # Show result
-        st.success(f"Predicted Price: ${predicted_price:.2f}")
-    else:
-        st.error("Model not loaded. Please try again later.")
+    predictions = model.transform(test_data_df)
+    prediction_result = predictions.select("prediction").collect()[0]["prediction"]
+    st.success(f"Predicted Fare: ${prediction_result:.2f}")
