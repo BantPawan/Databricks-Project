@@ -45,6 +45,6 @@ jobs:
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: <your-app-name>  # Replace with your Azure App Service name
+        app-name: streamlit-taxi-fare-app  # Replace with your Azure App Service name
         publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}  # Add your Azure publish profile in GitHub secrets
         package: .
