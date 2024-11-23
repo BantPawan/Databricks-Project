@@ -13,7 +13,7 @@ local_model_dir = "random_forest_model"
 local_zip_path = f"{local_model_dir}.zip"
 
 # Initialize Spark session (only once)
-spark = SparkSession.builder.appName("StreamlitApp").getOrCreate()
+spark = SparkSession.builder.master("local").appName("StreamlitApp").getOrCreate()
 
 # Download the model zip
 def download_model():
