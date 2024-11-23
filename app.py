@@ -1,69 +1,59 @@
-import streamlit as st
+  import streamlit as st
 import pandas as pd
 import joblib
 import zipfile
-from azure.storage.blob import BlobServiceClient
 import os
+from azure.storage.blob import BlobServiceClient
+from pyspark.sql import SparkSession
+
+
+# Initialize Spark
+@st.cache_resource
+def init_spark():
+    spark = SparkSession.builder \
+        .appName("Streamlit Cloud App") \
+        .config("spark.executor.memory", "2g") \
+        .getOrCreate()
+    return spark
+
+
+spark = init_spark()
 
 # Azure Storage Credentials
 CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=nycdemov1;AccountKey=KQVhKXYfyjKTg4ZNQjxIDyOXkhOEpGvdgP6Dq8A8jwgzIZ9N9hNLwj5yig4hoa+eaDtqi95kj+FP+AStXe5FiA==;EndpointSuffix=core.windows.net"
 CONTAINER_NAME = "nycdatabrick"
-MODEL_ZIP_BLOB_NAME = "models/random_forest_model.zip"  # Path for zipped model
-PARAMS_BLOB_NAME = "models/random_forest_model_params.pkl"  # Path for feature importances
 
-# Temporary file paths to download the model and parameters
-TEMP_MODEL_ZIP_PATH = "/tmp/random_forest_model.zip"
-TEMP_PARAMS_PATH = "/tmp/random_forest_model_params.pkl"
-TEMP_MODEL_PATH = "/tmp/random_forest_model.pkl"  # Extracted model file path
+# Download RandomForest model
+model_blob_name = "models/random_forest_model.zip"
+blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=model_blob_name)
 
-# Function to download blobs from Azure Blob Storage
-def download_blob_from_azure(blob_name, temp_path):
-    try:
-        # Connect to Azure Blob Storage
-        blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=blob_name)
-        
-        # Download the blob if not already downloaded
-        if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
-            with open(temp_path, "wb") as file:
-                file.write(blob_client.download_blob().readall())
-        
-        # Validate file integrity
-        if not os.path.exists(temp_path):
-            raise FileNotFoundError(f"File not found at {temp_path}")
-        
-        st.success(f"Downloaded {blob_name} successfully!")
-    except Exception as e:
-        st.error(f"Failed to download the blob: {e}")
-        raise
+# Save the model locally
+with open("/tmp/random_forest_model.zip", "wb") as file:
+    file.write(blob_client.download_blob().readall())
 
-# Function to unzip the model file
-def unzip_model(zip_path, extract_path):
-    try:
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_path)
-        st.success(f"Model extracted successfully from {zip_path}!")
-    except Exception as e:
-        st.error(f"Failed to unzip the model file: {e}")
-        raise
+# Extract and load the model
+with zipfile.ZipFile("/tmp/random_forest_model.zip", 'r') as zip_ref:
+    zip_ref.extractall("/tmp/random_forest_model")
+
+TEMP_MODEL_PATH = "/tmp/random_forest_model/model.pkl"  # Specify the extracted model path
+TEMP_PARAMS_PATH = "/tmp/random_forest_model/params.pkl"  # Specify parameters path
+
 
 # Load model and parameters
 @st.cache_resource
 def load_model_and_params():
-    # Download model and parameters from Azure Blob Storage
-    download_blob_from_azure(MODEL_ZIP_BLOB_NAME, TEMP_MODEL_ZIP_PATH)
-    download_blob_from_azure(PARAMS_BLOB_NAME, TEMP_PARAMS_PATH)
-    
-    # Unzip the model file
-    unzip_model(TEMP_MODEL_ZIP_PATH, "/tmp/")
-    
-    # Load the model from the extracted .pkl file
+    # Load the model
     model = joblib.load(TEMP_MODEL_PATH)
-    
+
     # Load the parameters
-    params = joblib.load(TEMP_PARAMS_PATH)
-    
+    if os.path.exists(TEMP_PARAMS_PATH):
+        params = joblib.load(TEMP_PARAMS_PATH)
+    else:
+        params = {"feature_importances": [0] * 3}  # Default values if params.pkl is missing
+
     return model, params
+
 
 # Load the trained model and parameters
 model, params = load_model_and_params()
@@ -96,14 +86,14 @@ if st.button("Predict Price"):
     # Display the predicted price
     st.write(f"**Predicted Price:** ${predicted_price:.2f}")
 
-    # Display feature importances (if needed)
+    # Display feature importances (if available)
     st.write("**Feature Importances:**")
     feature_importances = pd.DataFrame({
         "Feature": input_data.columns,
-        "Importance": params['feature_importances']  # Assuming params contains feature importances
+        "Importance": params.get('feature_importances', [0] * len(input_data.columns))
     }).sort_values(by="Importance", ascending=False)
 
     st.write(feature_importances)
 
 # Add a note for the user
-st.info("The price prediction is based on a trained Random Forest regression model.")
+st.info("The price prediction is based on a trained Random Forest model.")
