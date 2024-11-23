@@ -1,0 +1,50 @@
+name: Build and Deploy Streamlit App to Azure
+
+on:
+  push:
+    branches:
+      - main  # Trigger deploy when code is pushed to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger deploy on PR to the main branch
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up Python environment
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # Run Streamlit app build command
+    - name: Run Streamlit app
+      run: |
+        streamlit run app.py & # Run the Streamlit app in the background
+        sleep 30 # Wait for Streamlit to start (adjust as needed)
+
+    # Login to Azure CLI (Set up Azure credentials for GitHub)
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}  # You'll need to set this secret in GitHub
+
+    # Deploy to Azure App Service
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: <your-app-name>  # Replace with your Azure App Service name
+        publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}  # Add your Azure publish profile in GitHub secrets
+        package: .
