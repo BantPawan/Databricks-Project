@@ -1,5 +1,6 @@
 streamlit
 pandas
+pyspark
 folium
 streamlit-folium
 joblib
