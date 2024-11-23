@@ -5,7 +5,7 @@ from azure.storage.blob import BlobServiceClient
 import os
 
 # Azure Blob Storage configuration
-AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=nycdemov1;AccountKey=YOUR_ACCOUNT_KEY;EndpointSuffix=core.windows.net"
+AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=nycdemov1;AccountKey=KQVhKXYfyjKTg4ZNQjxIDyOXkhOEpGvdgP6Dq8A8jwgzIZ9N9hNLwj5yig4hoa+eaDtqi95kj+FP+AStXe5FiA==;EndpointSuffix=core.windows.net"
 CONTAINER_NAME = "nycdatabrick"
 MODEL_BLOB_NAME = "models/random_forest_model.pkl"
 
