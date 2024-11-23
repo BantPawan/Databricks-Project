@@ -1,1 +1,11 @@
--e "FROM openjdk:11-jdk-slim \n\n# Install Spark dependencies\nRUN apt-get update && apt-get install -y curl tar\n\n# Download and install Spark\nRUN curl -O https://downloads.apache.org/spark/spark-3.1.2/spark-3.1.2-bin-hadoop3.2.tgz\nRUN tar -xvf spark-3.1.2-bin-hadoop3.2.tgz -C /opt/\nRUN rm spark-3.1.2-bin-hadoop3.2.tgz\n\n# Set environment variables\nENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64\nENV SPARK_HOME=/opt/spark-3.1.2-bin-hadoop3.2\nENV PATH=\$JAVA_HOME/bin:\$SPARK_HOME/bin:\$PATH\n\n# Install Python dependencies\nCOPY requirements.txt /app/requirements.txt\nRUN pip install -r /app/requirements.txt\n\n# Set the working directory to the app\nWORKDIR /app\nCOPY . /app\n\n# Run Streamlit app\nCMD [\"streamlit\", \"run\", \"app.py\"]" 
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY . /app
+
+RUN pip install -r requirements.txt
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "your_app.py", "--server.port=8501", "--server.enableCORS=false"]
