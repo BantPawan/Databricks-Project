@@ -15,17 +15,26 @@ TEMP_MODEL_PATH = "/tmp/random_forest_model.pkl"
 # Download the model from Azure Blob Storage
 @st.cache_resource
 def load_model():
-    # Connect to Azure Blob Storage
-    blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
-    blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=MODEL_BLOB_NAME)
+    try:
+        # Connect to Azure Blob Storage
+        blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=MODEL_BLOB_NAME)
+        
+        # Download the model file if not already downloaded
+        if not os.path.exists(TEMP_MODEL_PATH) or os.path.getsize(TEMP_MODEL_PATH) == 0:
+            with open(TEMP_MODEL_PATH, "wb") as model_file:
+                model_file.write(blob_client.download_blob().readall())
+        
+        # Validate file integrity
+        if not os.path.exists(TEMP_MODEL_PATH):
+            raise FileNotFoundError(f"Model file not found at {TEMP_MODEL_PATH}")
+        
+        # Load the model with joblib
+        return joblib.load(TEMP_MODEL_PATH)
     
-    # Download the model file if not already downloaded
-    if not os.path.exists(TEMP_MODEL_PATH):
-        with open(TEMP_MODEL_PATH, "wb") as model_file:
-            model_file.write(blob_client.download_blob().readall())
-    
-    # Load the model with joblib
-    return joblib.load(TEMP_MODEL_PATH)
+    except Exception as e:
+        st.error(f"Failed to load the model: {e}")
+        raise
 
 # Load the trained model
 model = load_model()
