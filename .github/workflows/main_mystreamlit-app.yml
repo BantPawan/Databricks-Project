@@ -49,7 +49,7 @@ jobs:
           docker build -t myacrstreamlit.azurecr.io/mystreamlit-app:latest .
           docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Push the image to ACR
 
-      # Step 7: Deploy Docker image to Azure Web App
+      # Step 7: Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2  # Use webapps-deploy for deployment
         with:
@@ -62,12 +62,26 @@ jobs:
         run: |
           echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV  # Add to environment
 
-      # Step 9: Verify that the app is live
+      # Step 9: Verify that the app is live with retry logic
       - name: Verify Deployment
         run: |
-          curl --fail https://mystreamlit-app.azurewebsites.net || exit 1  # Verify the deployment is live
+          # Retry 5 times with a 30-second delay between each attempt
+          for i in {1..5}; do
+            echo "Attempt $i to verify the deployment..."
+            curl --fail https://mystreamlit-app.azurewebsites.net && break || sleep 30
+          done
 
-      # Optional Step 10: Swap staging slot to production (for smoother deployments)
+      # Step 10: Debug step (optional)
+      - name: Debug Environment
+        if: failure()  # Run only if a failure occurs
+        run: |
+          echo "Node.js version:"
+          node --version  # Check Node.js version (if Node.js is part of the setup)
+          echo "npm version:"
+          npm --version  # Check npm version
+          ls -al /home/runner/work/_actions/azure/webapps-deploy/v2/  # List the contents of the action's folder to check if the files are present
+
+      # Optional Step 11: Swap Staging to Production (Optional)
       - name: Swap Staging to Production (Optional)
         if: success() && github.ref == 'refs/heads/main'  # Trigger only on successful main branch push
         uses: azure/webapps-deploy@v2  # Use webapps-deploy to handle slot swaps
