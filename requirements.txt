@@ -5,3 +5,4 @@ folium
 streamlit-folium
 joblib
 azure-storage-blob
+pytest>=7.0.0
