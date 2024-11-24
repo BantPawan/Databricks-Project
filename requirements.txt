@@ -6,3 +6,4 @@ streamlit-folium
 joblib
 azure-storage-blob
 setuptools>=40.8.0
+pytest
