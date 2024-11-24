@@ -59,9 +59,8 @@ jobs:
 
       - name: Swap Staging to Production (Optional)
         if: success() && github.ref == 'refs/heads/main'
-        uses: azure/webapps-slot-swap@v1
-        with:
-          app-name: mystreamlit-app
-          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          source-slot-name: staging
-          target-slot-name: production
+        run: |
+          az webapp deployment slot swap --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name mystreamlit-app \
+            --slot staging \
+            --target-slot production
