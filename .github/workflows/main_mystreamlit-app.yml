@@ -50,32 +50,14 @@ jobs:
           docker build -t myacrstreamlit.azurecr.io/mystreamlit-app:latest .  # Build Docker image
           docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Push image to ACR
 
-      # Step 7: Deploy to Azure Web App (Production Slot)
-      - name: Deploy to Azure Web App - Production
+      # Step 7: Deploy to Azure Web App (Production Slot Only)
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: mystreamlit-app  # Azure Web App name
           images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image from ACR
 
-      # Optional: Deploy to Staging Slot (if staging exists)
-      - name: Deploy to Azure Web App - Staging (Optional)
-        if: success() && github.ref == 'refs/heads/main'  # Trigger only on successful main branch push
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: mystreamlit-app  # Azure Web App name
-          slot-name: staging  # Target staging slot
-          images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image from ACR
-
-      # Step 8: Swap Staging to Production (Optional)
-      - name: Swap Staging to Production
-        if: success() && github.ref == 'refs/heads/main'
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: mystreamlit-app  # Azure Web App name
-          source-slot: staging
-          target-slot: production
-
-      # Step 9: Verify the deployment
+      # Step 8: Verify the deployment
       - name: Verify Deployment
         run: |
           for i in {1..5}; do
@@ -83,9 +65,9 @@ jobs:
             curl --fail https://mystreamlit-app.azurewebsites.net && break || sleep 30
           done
 
-      # Optional Step: Debug step (only runs if there is a failure)
+      # Optional Step: Debugging (only runs if there is a failure)
       - name: Debug Environment
-        if: failure()  # Run only if a failure occurs
+        if: failure()
         run: |
           echo "Node.js version:"
           node --version || echo "Node.js not installed"
