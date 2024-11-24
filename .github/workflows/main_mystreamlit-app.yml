@@ -1,78 +1,85 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
-name: Build and deploy Python app to Azure Web App - mystreamlit-app
+name: Build and Deploy Streamlit App to Azure
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main  # Trigger deploy when code is pushed to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger deploy on PR to the main branch
 
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Python version
-        uses: actions/setup-python@v5
+      # Set up Python environment
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.x'
 
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-      
+      # Install dependencies
       - name: Install dependencies
-        run: pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Install dependencies from requirements.txt
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
-      - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v4
+      # Log in to Azure using Service Principal
+      - name: Log in to Azure
+        uses: azure/login@v1
         with:
-          name: python-app
-          path: |
-            release.zip
-            !venv/
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+      # Log in to Azure Container Registry
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v1
         with:
-          name: python-app
+          login-server: myacrstreamlit.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
+      # Clean up old Docker images (if needed)
+      - name: Clean up old Docker images
+        run: |
+          docker rmi myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest || true
 
-      
-      - name: Login to Azure
-        uses: azure/login@v2
+      # Build and push Docker image
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest .
+          docker push myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest
+
+      # Deploy to Azure Web App (Production Slot)
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_686C29716A5A40AEB676A49AC9E78CF3 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DA984264857B418DBB891F6C7710A2A5 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_27E7C55B5236452DA88E9BB68600A589 }}
+          app-name: mystreamlit-app  # Updated to the new Azure App Service name
+          images: myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest
+          slot-name: production  # Default slot for deployment
 
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: 'mystreamlit-app'
-          slot-name: 'Production'
-          
+      # Optional: Set AZURE_STORAGE_CONNECTION_STRING environment variable for the app
+      - name: Set AZURE_STORAGE_CONNECTION_STRING for Streamlit App
+        run: |
+          echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV
+
+      # Verify Deployment
+      - name: Verify Deployment
+        run: |
+          curl --fail https://mystreamlit-app.azurewebsites.net || exit 1  # Updated to the new Azure App Service URL
+
+      # Optional: Swap Slots if using Staging Slot
+      - name: Swap Staging to Production
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          az webapp deployment slot swap \
+            --name mystreamlit-app \  # Updated to the new Azure App Service name
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
+            --target-slot production
