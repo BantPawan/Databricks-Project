@@ -51,7 +51,7 @@ jobs:
 
       # Step 7: Deploy Docker image to Azure Web App
       - name: Deploy to Azure Web App
-        uses: azure/webapps-container-deploy@v1  # Changed to v1
+        uses: azure/webapps-deploy@v2  # Use webapps-deploy for deployment
         with:
           app-name: mystreamlit-app  # Azure Web App name
           slot-name: production  # Production slot for deployment
@@ -70,9 +70,8 @@ jobs:
       # Optional Step 10: Swap staging slot to production (for smoother deployments)
       - name: Swap Staging to Production (Optional)
         if: success() && github.ref == 'refs/heads/main'  # Trigger only on successful main branch push
-        uses: azure/webapps-slot-swap@v1  # Changed to v1
+        uses: azure/webapps-deploy@v2  # Use webapps-deploy to handle slot swaps
         with:
           app-name: mystreamlit-app  # Ensure this matches your app name
-          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}  # Resource group name
-          source-slot-name: staging  # Staging slot for testing
-          target-slot-name: production  # Move to production slot after successful tests
+          slot-name: staging  # Staging slot for testing
+          images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image for slot swap
