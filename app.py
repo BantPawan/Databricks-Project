@@ -14,17 +14,19 @@ if not STORAGE_CONNECTION_STRING:
     st.error("Azure Storage Connection String is not set. Please configure it in the Azure portal.")
 else:
     def download_model():
-        try:
-            st.info("Downloading model from Azure Blob Storage...")
-            blob_service_client = BlobServiceClient.from_connection_string(STORAGE_CONNECTION_STRING)
-            blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
+    try:
+        st.info("Downloading model from Azure Blob Storage...")
+        blob_service_client = BlobServiceClient.from_connection_string(STORAGE_CONNECTION_STRING)
+        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
 
-            with open(MODEL_LOCAL_PATH, "wb") as model_file:
-                model_file.write(blob_client.download_blob().readall())
-            st.success("Model downloaded successfully!")
-        except Exception as e:
-            st.error(f"Error downloading model: {e}")
-
+        with open(MODEL_LOCAL_PATH, "wb") as model_file:
+            model_file.write(blob_client.download_blob().readall())
+        st.success("Model downloaded successfully!")
+        return MODEL_LOCAL_PATH
+    except Exception as e:
+        st.error(f"Error downloading model: {e}")
+        return None
+        
     @st.cache_resource
     def init_spark_session():
         return SparkSession.builder.appName("ModelPrediction").getOrCreate()
