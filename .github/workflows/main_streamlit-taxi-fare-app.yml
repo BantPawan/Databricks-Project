@@ -44,7 +44,7 @@ jobs:
 
       # Deploy to Azure Web App
       - name: Deploy to Azure Web App
-        uses: azure/webapps-container-deploy@v1
+        uses: azure/webapps-deploy@v2  # Use the latest version
         with:
           app-name: streamlit-taxi-fare-app  # Azure App Service name
           slot-name: production  # Default slot for deployment
@@ -53,3 +53,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           registry-url: myacrstreamlit.azurecr.io
+
+      # Debug step (optional)
+      - name: Debug Environment
+        if: failure()  # Run only if a failure occurs
+        run: |
+          echo "Node.js version:"
+          node --version
+          echo "npm version:"
+          npm --version
+          ls -al /home/runner/work/_actions/azure/webapps-deploy/v2/
