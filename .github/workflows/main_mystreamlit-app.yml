@@ -51,7 +51,7 @@ jobs:
 
       # Step 7: Deploy to Azure Web App
       - name: Deploy to Azure Web App
-        uses: azure/webapps-container-deploy@v2
+        uses: azure/webapps-container-deploy@v1
         with:
           app-name: mystreamlit-app
           slot-name: production
