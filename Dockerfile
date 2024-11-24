@@ -1,12 +1,9 @@
-FROM python:3.9-slim
+FROM openjdk:11-jdk-slim
 
-# Install necessary dependencies for Spark
-RUN apt-get update && apt-get install -y openjdk-11-jdk wget && \
+# Install Python and necessary tools
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Set Java environment variables for Spark
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-ENV PATH="$JAVA_HOME/bin:$PATH"
 
 WORKDIR /app
 
