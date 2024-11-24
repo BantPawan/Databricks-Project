@@ -3,42 +3,33 @@ name: Build and Deploy Streamlit App to Azure
 on:
   push:
     branches:
-      - main  # Trigger deploy when code is pushed to the main branch
+      - main
   pull_request:
     branches:
-      - main  # Trigger deploy on PR to the main branch
-  workflow_dispatch:
+      - main
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Python environment
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Install dependencies from requirements.txt
+          pip install -r requirements.txt
 
-      # Log in to Azure using Service Principal
       - name: Log in to Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Use stored Service Principal credentials
 
-      # Log in to Azure Container Registry
       - name: Log in to Azure Container Registry
         uses: azure/docker-login@v1
         with:
@@ -46,41 +37,31 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # Clean up old Docker images (if needed)
-      - name: Clean up old Docker images
-        run: |
-          docker rmi myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest || true
-
-      # Build and push Docker image
       - name: Build and Push Docker Image
         run: |
           docker build -t myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest .
           docker push myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest
 
-      # Deploy to Azure Web App (Production Slot)
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v1
+        uses: azure/webapps-container-deploy@v2
         with:
-          app-name: mystreamlit-app  # Updated to the new Azure App Service name
+          app-name: mystreamlit-app  # Ensure this matches your Azure Web App name
+          slot-name: production  # Default production slot
           images: myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest
-          slot-name: production  # Default slot for deployment
 
-      # Optional: Set AZURE_STORAGE_CONNECTION_STRING environment variable for the app
       - name: Set AZURE_STORAGE_CONNECTION_STRING for Streamlit App
         run: |
           echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV
 
-      # Verify Deployment
       - name: Verify Deployment
         run: |
-          curl --fail https://mystreamlit-app.azurewebsites.net || exit 1  # Updated to the new Azure App Service URL
+          curl --fail https://mystreamlit-app.azurewebsites.net || exit 1  # Verify the deployment is live
 
-      # Optional: Swap Slots if using Staging Slot
-      - name: Swap Staging to Production
+      - name: Swap Staging to Production (Optional)
         if: success() && github.ref == 'refs/heads/main'
-        run: |
-          az webapp deployment slot swap \
-            --name mystreamlit-app \  # Updated to the new Azure App Service name
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --slot staging \
-            --target-slot production
+        uses: azure/webapps-slot-swap@v1
+        with:
+          app-name: mystreamlit-app
+          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          source-slot-name: staging
+          target-slot-name: production
