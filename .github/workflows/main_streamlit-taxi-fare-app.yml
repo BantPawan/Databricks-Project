@@ -59,11 +59,16 @@ jobs:
           slot-name: production  # Default slot for deployment
           images: myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest
 
+      # Set AZURE_STORAGE_CONNECTION_STRING environment variable for the app
+      - name: Set AZURE_STORAGE_CONNECTION_STRING for Streamlit App
+        run: |
+          echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV
+
       # Check if deployment was successful (optional)
       - name: Verify Deployment
         run: |
           curl --fail https://streamlit-taxi-fare-app.azurewebsites.net || exit 1  # Check if the app is up and running
-          
+
       # Optional: Swap Slots if using Staging Slot (Recommended for smooth deployments)
       - name: Swap Staging to Production (Optional)
         if: success() && github.ref == 'refs/heads/main'
