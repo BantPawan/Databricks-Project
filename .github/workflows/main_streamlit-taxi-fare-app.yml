@@ -51,10 +51,25 @@ jobs:
           docker build -t myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest .
           docker push myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest
 
-      # Deploy to Azure Web App
+      # Deploy to Azure Web App (Production Slot)
       - name: Deploy to Azure Web App
         uses: azure/webapps-container-deploy@v2
         with:
           app-name: streamlit-taxi-fare-app  # Azure App Service name
           slot-name: production  # Default slot for deployment
           images: myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest
+
+      # Check if deployment was successful (optional)
+      - name: Verify Deployment
+        run: |
+          curl --fail https://streamlit-taxi-fare-app.azurewebsites.net || exit 1  # Check if the app is up and running
+          
+      # Optional: Swap Slots if using Staging Slot (Recommended for smooth deployments)
+      - name: Swap Staging to Production (Optional)
+        if: success() && github.ref == 'refs/heads/main'
+        uses: azure/webapps-slot-swap@v1
+        with:
+          app-name: streamlit-taxi-fare-app
+          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          source-slot-name: staging
+          target-slot-name: production
