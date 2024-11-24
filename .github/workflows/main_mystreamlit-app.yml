@@ -51,10 +51,10 @@ jobs:
 
       # Step 7: Deploy to Azure Web App
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2  # Use webapps-deploy for deployment
+        uses: azure/webapps-container-deploy@v2
         with:
-          app-name: mystreamlit-app  # Azure Web App name
-          slot-name: production  # Production slot for deployment
+          app-name: mystreamlit-app
+          slot-name: production
           images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image from ACR
 
       # Step 8: Set environment variable for Azure Storage connection string
