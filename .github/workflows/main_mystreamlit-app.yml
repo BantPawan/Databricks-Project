@@ -46,23 +46,23 @@ jobs:
       # Step 6: Build and Push Docker Image to Azure Container Registry
       - name: Build and Push Docker Image
         run: |
-          docker build -t myacrstreamlit.azurecr.io/mystreamlit-app:latest .
-          docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Push the image to ACR
+          docker build -t myacrstreamlit.azurecr.io/mystreamlit-app:latest .  # Build Docker image
+          docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Push image to ACR
 
       # Step 7: Deploy to Azure Web App
       - name: Deploy to Azure Web App
-        uses: azure/webapps-container-deploy@v1
+        uses: azure/webapps-container-deploy@v1  # Use webapps-container-deploy for container deployment
         with:
-          app-name: mystreamlit-app
-          slot-name: production
+          app-name: mystreamlit-app  # Azure Web App name
+          slot-name: production  # Use the production slot for deployment
           images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image from ACR
 
       # Step 8: Set environment variable for Azure Storage connection string
       - name: Set AZURE_STORAGE_CONNECTION_STRING for Streamlit App
         run: |
-          echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV  # Add to environment
+          echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV  # Add connection string to env
 
-      # Step 9: Verify that the app is live with retry logic
+      # Step 9: Verify the deployment with retry logic
       - name: Verify Deployment
         run: |
           # Retry 5 times with a 30-second delay between each attempt
@@ -71,15 +71,15 @@ jobs:
             curl --fail https://mystreamlit-app.azurewebsites.net && break || sleep 30
           done
 
-      # Step 10: Debug step (optional)
+      # Optional Step 10: Debug step (only runs if there is a failure)
       - name: Debug Environment
         if: failure()  # Run only if a failure occurs
         run: |
-          echo "Node.js version:"
-          node --version  # Check Node.js version (if Node.js is part of the setup)
-          echo "npm version:"
-          npm --version  # Check npm version
-          ls -al /home/runner/work/_actions/azure/webapps-deploy/v2/  # List the contents of the action's folder to check if the files are present
+          echo "Node.js version:"  # Debug Node.js version (if part of your setup)
+          node --version
+          echo "npm version:"  # Debug npm version
+          npm --version
+          ls -al /home/runner/work/_actions/azure/webapps-deploy/v2/  # List contents of the action folder
 
       # Optional Step 11: Swap Staging to Production (Optional)
       - name: Swap Staging to Production (Optional)
