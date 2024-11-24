@@ -7,70 +7,72 @@ on:
   pull_request:
     branches:
       - main  # Trigger deploy on PR to the main branch
+  workflow_dispatch:  # Allow manual trigger of the workflow
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the repository
+      # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Python environment
+      # Step 2: Set up Python environment (version 3.x)
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # Install dependencies
+      # Step 3: Install dependencies from requirements.txt
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Install the dependencies from the requirements.txt file
+          pip install -r requirements.txt  # Install dependencies from the requirements file
 
-      # Log in to Azure using service principal credentials stored in GitHub secrets
+      # Step 4: Log in to Azure using Service Principal credentials
       - name: Log in to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Ensure your Service Principal credentials are stored in secrets
 
-      # Log in to Azure Container Registry (ACR)
+      # Step 5: Log in to Azure Container Registry (ACR)
       - name: Log in to Azure Container Registry
         uses: azure/docker-login@v1
         with:
-          login-server: myacrstreamlit.azurecr.io
+          login-server: myacrstreamlit.azurecr.io  # ACR login server
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # Build Docker image and push to ACR
+      # Step 6: Build and Push Docker Image to Azure Container Registry
       - name: Build and Push Docker Image
         run: |
           docker build -t myacrstreamlit.azurecr.io/mystreamlit-app:latest .
-          docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest
+          docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Push the image to ACR
 
-      # Set AZURE_STORAGE_CONNECTION_STRING environment variable for the Streamlit app
+      # Step 7: Deploy Docker image to Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-container-deploy@v2
+        with:
+          app-name: mystreamlit-app  # Azure Web App name
+          slot-name: production  # Production slot for deployment
+          images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image from ACR
+
+      # Step 8: Set environment variable for Azure Storage connection string
       - name: Set AZURE_STORAGE_CONNECTION_STRING for Streamlit App
         run: |
-          echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV
+          echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV  # Add to environment
 
-      # Deploy to Azure Web App using Azure CLI (Manual Deployment)
-      - name: Deploy to Azure Web App via Azure CLI
-        run: |
-          az webapp config container set --name mystreamlit-app \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --docker-custom-image-name myacrstreamlit.azurecr.io/mystreamlit-app:latest
-
-      # Optional: Verify Deployment
+      # Step 9: Verify that the app is live
       - name: Verify Deployment
         run: |
-          curl --fail https://mystreamlit-app.azurewebsites.net || exit 1  # Check if the app is up and running
+          curl --fail https://mystreamlit-app.azurewebsites.net || exit 1  # Verify the deployment is live
 
-      # Optional: Swap Staging to Production (If Using Staging Slot)
+      # Optional Step 10: Swap staging slot to production (for smoother deployments)
       - name: Swap Staging to Production (Optional)
-        if: success() && github.ref == 'refs/heads/main'
-        run: |
-          az webapp deployment slot swap --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --name mystreamlit-app \
-            --slot staging \
-            --target-slot production
+        if: success() && github.ref == 'refs/heads/main'  # Trigger only on successful main branch push
+        uses: azure/webapps-slot-swap@v1
+        with:
+          app-name: mystreamlit-app  # Ensure this matches your app name
+          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}  # Resource group name
+          source-slot-name: staging  # Staging slot for testing
+          target-slot-name: production  # Move to production slot after successful tests
