@@ -45,6 +45,11 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
+      # Clean up old Docker images (if needed)
+      - name: Clean up old Docker images
+        run: |
+          docker rmi myacrstreamlit.azurecr.io/streamlit-taxi-fare-app:latest || true
+
       # Build and push Docker image
       - name: Build and Push Docker Image
         run: |
