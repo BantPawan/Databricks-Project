@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python version
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v1
         with:
           python-version: '3.11'
 
@@ -22,17 +22,21 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
+          pip install -r requirements.txt
+          pip show pytest  # Verify pytest installation
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Check installed packages
+        run: |
+          source venv/bin/activate
+          pip list  # List all installed packages to confirm pytest is installed
 
       - name: Run tests
         run: |
           source venv/bin/activate
-          pytest tests/
+          pytest  # Run tests with pytest
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip ./* -x "*.git/*" -x "venv/*"
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v3
