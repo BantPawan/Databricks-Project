@@ -3,7 +3,7 @@ name: Build and Deploy Streamlit App to Azure
 on:
   push:
     branches:
-      - main  # Trigger deploy when code is pushed to the main branch
+      - main  # Trigger deploy on code push to the main branch
   pull_request:
     branches:
       - main  # Trigger deploy on PR to the main branch
@@ -12,6 +12,7 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+
     steps:
       # Step 1: Checkout the code from the repository
       - name: Checkout code
@@ -49,43 +50,45 @@ jobs:
           docker build -t myacrstreamlit.azurecr.io/mystreamlit-app:latest .  # Build Docker image
           docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Push image to ACR
 
-      # Step 7: Deploy to Azure Web App
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2  # Use webapps-container-deploy for container deployment
+      # Step 7: Deploy to Azure Web App (Production Slot)
+      - name: Deploy to Azure Web App - Production
+        uses: azure/webapps-deploy@v2
         with:
           app-name: mystreamlit-app  # Azure Web App name
-          slot-name: production  # Use the production slot for deployment
           images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image from ACR
 
-      # Step 8: Set environment variable for Azure Storage connection string
-      - name: Set AZURE_STORAGE_CONNECTION_STRING for Streamlit App
-        run: |
-          echo "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" >> $GITHUB_ENV  # Add connection string to env
+      # Optional: Deploy to Staging Slot (if staging exists)
+      - name: Deploy to Azure Web App - Staging (Optional)
+        if: success() && github.ref == 'refs/heads/main'  # Trigger only on successful main branch push
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: mystreamlit-app  # Azure Web App name
+          slot-name: staging  # Target staging slot
+          images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image from ACR
 
-      # Step 9: Verify the deployment with retry logic
+      # Step 8: Swap Staging to Production (Optional)
+      - name: Swap Staging to Production
+        if: success() && github.ref == 'refs/heads/main'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: mystreamlit-app  # Azure Web App name
+          source-slot: staging
+          target-slot: production
+
+      # Step 9: Verify the deployment
       - name: Verify Deployment
         run: |
-          # Retry 5 times with a 30-second delay between each attempt
           for i in {1..5}; do
             echo "Attempt $i to verify the deployment..."
             curl --fail https://mystreamlit-app.azurewebsites.net && break || sleep 30
           done
 
-      # Optional Step 10: Debug step (only runs if there is a failure)
+      # Optional Step: Debug step (only runs if there is a failure)
       - name: Debug Environment
         if: failure()  # Run only if a failure occurs
         run: |
-          echo "Node.js version:"  # Debug Node.js version (if part of your setup)
-          node --version
-          echo "npm version:"  # Debug npm version
-          npm --version
-          ls -al /home/runner/work/_actions/azure/webapps-deploy/v2/  # List contents of the action folder
-
-      # Optional Step 11: Swap Staging to Production (Optional)
-      - name: Swap Staging to Production (Optional)
-        if: success() && github.ref == 'refs/heads/main'  # Trigger only on successful main branch push
-        uses: azure/webapps-deploy@v2  # Use webapps-deploy to handle slot swaps
-        with:
-          app-name: mystreamlit-app  # Ensure this matches your app name
-          slot-name: staging  # Staging slot for testing
-          images: myacrstreamlit.azurecr.io/mystreamlit-app:latest  # Image for slot swap
+          echo "Node.js version:"
+          node --version || echo "Node.js not installed"
+          echo "npm version:"
+          npm --version || echo "npm not installed"
+          ls -al /home/runner/work/_actions/azure/webapps-deploy/v2/  # List action folder
