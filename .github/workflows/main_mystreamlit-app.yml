@@ -24,56 +24,45 @@ jobs:
         with:
           python-version: '3.x'
 
-      # Step 3: Cache Python dependencies
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      # Step 4: Install dependencies from requirements.txt
+      # Step 3: Install dependencies from requirements.txt
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 5: Log in to Azure using Service Principal credentials
+      # Step 4: Log in to Azure using Service Principal credentials
       - name: Log in to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Step 6: Log in to Azure Container Registry (if not using Managed Identity)
+      # Step 5: Log in to Azure Container Registry (ACR)
       - name: Log in to Azure Container Registry
-        if: ${{ secrets.ACR_USERNAME && secrets.ACR_PASSWORD }}
         uses: azure/docker-login@v1
         with:
           login-server: myacrstreamlit.azurecr.io
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # Step 7: Build and Push Docker Image to Azure Container Registry
+      # Step 6: Build and Push Docker Image to Azure Container Registry
       - name: Build and Push Docker Image
         run: |
           docker build -t myacrstreamlit.azurecr.io/mystreamlit-app:latest .
           docker push myacrstreamlit.azurecr.io/mystreamlit-app:latest
 
-      # Step 8: Deploy to Azure Web App
+      # Step 7: Deploy to Azure Web App (Production Slot Only)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: mystreamlit-app
           images: myacrstreamlit.azurecr.io/mystreamlit-app:latest
 
-      # Optional Step 9: Debugging (runs only on failure)
+      # Optional Step: Debugging (only runs if there is a failure)
       - name: Debug Environment
         if: failure()
         run: |
-          echo "Debugging environment..."
-          echo "Python version:"
-          python --version
-          echo "Docker version:"
-          docker --version
-          ls -al .
+          echo "Node.js version:"
+          node --version || echo "Node.js not installed"
+          echo "npm version:"
+          npm --version || echo "npm not installed"
+          ls -al /home/runner/work/_actions/azure/webapps-deploy/v2/
