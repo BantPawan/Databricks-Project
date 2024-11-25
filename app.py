@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 from pyspark.sql import SparkSession
+from pyspark.ml import PipelineModel, RandomForestModel
 
 # Azure Storage Configuration
 STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')  # Fetch from environment variable
@@ -25,12 +26,31 @@ else:
     # Model path on Azure Blob Storage
     model_path = f"wasbs://{CONTAINER_NAME}@nycdemov1.blob.core.windows.net/{BLOB_NAME}"
 
-    # Load the model from Azure Blob Storage
-    try:
-        model = spark.read.load(model_path)
-    except Exception as e:
-        st.error(f"Error loading model from Azure Blob: {e}")
-        model = None
+    # Try loading the model with different strategies
+    def load_model():
+        try:
+            # Attempt to load as PipelineModel
+            model = PipelineModel.load(model_path)
+            st.success("PipelineModel loaded successfully.")
+            return model
+        except Exception as e:
+            st.warning(f"Failed to load PipelineModel: {e}")
+            return None
+
+    def load_random_forest_model():
+        try:
+            # Attempt to load as RandomForestModel
+            model = RandomForestModel.load(model_path)
+            st.success("RandomForestModel loaded successfully.")
+            return model
+        except Exception as e:
+            st.warning(f"Failed to load RandomForestModel: {e}")
+            return None
+
+    # Load model using the fallback mechanism
+    model = load_model()
+    if not model:
+        model = load_random_forest_model()
 
     # Ensure model is loaded
     if model:
