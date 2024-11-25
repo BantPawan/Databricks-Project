@@ -67,7 +67,7 @@ jobs:
           app-name: mystreamlit-app
           images: myacrstreamlit.azurecr.io/mystreamlit-app:latest
 
-      # Optional Step 09: Debugging (runs only on failure)
+      # Optional Step 9: Debugging (runs only on failure)
       - name: Debug Environment
         if: failure()
         run: |
