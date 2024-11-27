@@ -2,7 +2,6 @@ streamlit
 pandas
 streamlit
 pyspark
-scikit-learn
 pytest
 boto3
 requests
