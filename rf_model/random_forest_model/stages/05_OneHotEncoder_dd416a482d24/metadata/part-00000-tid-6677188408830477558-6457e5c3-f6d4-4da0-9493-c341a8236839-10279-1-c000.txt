@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.OneHotEncoderModel","timestamp":1732681285871,"sparkVersion":"3.5.0","uid":"OneHotEncoder_dd416a482d24","paramMap":{"dropLast":false,"outputCol":"dropoff_borough_encoded","handleInvalid":"error","inputCol":"dropoff_borough_index"},"defaultParamMap":{"dropLast":true,"outputCol":"OneHotEncoder_dd416a482d24__output","handleInvalid":"error"}}

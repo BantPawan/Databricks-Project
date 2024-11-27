@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.StringIndexerModel","timestamp":1732681282757,"sparkVersion":"3.5.0","uid":"StringIndexer_ce09dcc29389","paramMap":{"outputCol":"dropoff_borough_index","inputCol":"dropoff_borough"},"defaultParamMap":{"handleInvalid":"error","outputCol":"StringIndexer_ce09dcc29389__output","stringOrderType":"frequencyDesc"}}
