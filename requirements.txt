@@ -5,3 +5,4 @@ pyspark
 pytest
 boto3
 requests
+setuptools
