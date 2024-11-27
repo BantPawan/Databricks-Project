@@ -32,7 +32,7 @@ def map_categorical_inputs(input_value, mapping_dict):
 
 # Main Streamlit app
 def main():
-    st.title("Nyc Taxi Fare App")
+    st.title("NYC Taxi Fare Prediction App")
 
     model = load_model()
     if model:
@@ -62,7 +62,7 @@ def main():
             payment_type_map = {"Card": 1, "Cash": 2}
             is_holiday_map = {"Yes": 1, "No": 0}
             pickup_day_of_week_map = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6}
-            near_airport_map = {"Yes": 1, "No": 0}  # Add mapping for near_airport
+            near_airport_map = {"Yes": 1, "No": 0}
 
             # Prepare the single query
             single_query = [(
@@ -77,7 +77,7 @@ def main():
                 map_categorical_inputs(is_holiday, is_holiday_map),
                 distance_bin,
                 time_of_day_bin,
-                map_categorical_inputs(near_airport, near_airport_map)  # Map near_airport
+                map_categorical_inputs(near_airport, near_airport_map)
             )]
 
             columns = [
@@ -90,20 +90,15 @@ def main():
                 # Create a DataFrame with the mapped values
                 test_data_df = spark.createDataFrame(single_query, columns)
 
-                # Explicitly cast columns that are categorical to 'int' for correct processing
-                test_data_df = test_data_df.withColumn("payment_type", test_data_df["payment_type"].cast("int"))
-                test_data_df = test_data_df.withColumn("is_holiday", test_data_df["is_holiday"].cast("int"))
-                test_data_df = test_data_df.withColumn("pickup_day_of_week", test_data_df["pickup_day_of_week"].cast("int"))
-                test_data_df = test_data_df.withColumn("near_airport", test_data_df["near_airport"].cast("int"))
+                # Show the input data as a DataFrame in Streamlit
+                st.write("Input Data:")
+                st.dataframe(test_data_df.toPandas())  # Display the dataframe using Pandas for better visualization
 
-                # Perform prediction
+                # Make predictions
                 predictions = model.transform(test_data_df)
-                prediction_result = predictions.select("prediction").collect()
+                prediction_result = predictions.select("prediction").collect()[0]["prediction"]
+                st.success(f"Predicted Fare: ₹{prediction_result:.2f}")
 
-                # Display the prediction result
-                st.write("### Prediction Result:")
-                for row in prediction_result:
-                    st.write(f"Predicted Value: {row['prediction']}")
             except Exception as e:
                 st.error(f"Error during prediction: {e}")
 
