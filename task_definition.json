@@ -4,6 +4,7 @@
     {
       "name": "streamlit-app",
       "image": "978547346149.dkr.ecr.us-east-1.amazonaws.com/nyc-registry",
+      "command": ["streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=8501"],
       "cpu": 1024,
       "memory": 3072,
       "essential": true,
