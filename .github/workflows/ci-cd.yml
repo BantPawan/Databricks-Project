@@ -43,10 +43,20 @@ jobs:
           cluster: nyc-streamlit-app
           wait-for-service-stability: true
 
-      # (Optional) Verify Deployment
+      # (Optional) Debug ECS Service and Tasks
+      - name: Debug ECS Service
+        run: |
+          aws ecs describe-services --cluster nyc-streamlit-app --services nyc-streamlit-service
+
+      - name: Debug ECS Tasks
+        run: |
+          aws ecs list-tasks --cluster nyc-streamlit-app
+
+      # Verify Deployment
       - name: Verify Deployment
         run: |
-          APP_URL="http://streamlit-alb-1076202224.us-east-1.elb.amazonaws.com:8501" 
+          APP_URL="http://streamlit-alb-1076202224.us-east-1.elb.amazonaws.com:8501" # Update this with your ALB DNS name
+          sleep 30  # Wait for 30 seconds to allow the app to initialize
           if curl --silent --fail "$APP_URL"; then
             echo "Streamlit App is live at $APP_URL"
           else
