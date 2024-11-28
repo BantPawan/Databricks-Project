@@ -52,3 +52,4 @@ jobs:
           else
             echo "Deployment failed or the app is not reachable."
             exit 1
+          fi
