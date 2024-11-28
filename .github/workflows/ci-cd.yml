@@ -34,6 +34,7 @@ jobs:
     # Step 5: Add SSH Key for EC2
     - name: Add SSH Key
       run: |
+        mkdir -p ~/.ssh  # Ensure the directory exists
         echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
         chmod 600 ~/.ssh/ec2_key.pem
 
