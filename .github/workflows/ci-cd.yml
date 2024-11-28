@@ -1,0 +1,45 @@
+name: Deploy Streamlit App to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Log in to Amazon ECR
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # Pull the Docker image from ECR
+    - name: Pull Docker image from ECR
+      run: |
+        docker pull ${{ secrets.ECR_REPOSITORY_URI }}
+
+    # Deploy to AWS ECS
+    - name: Deploy to AWS ECS
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        service: nyc-streamlit-service
+        cluster: nyc-streamlit-app
+        wait-for-service-stability: true
+
+    # (Optional) Verify Deployment
+    - name: Verify Deployment
+      run: |
+        APP_URL="https://54.88.171.149:8501"
+        if curl --silent --fail "$APP_URL"; then
+          echo "Streamlit App is live at $APP_URL"
+        else
+          echo "Deployment failed or the app is not reachable."
+          exit 1
+        fi
