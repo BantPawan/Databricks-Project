@@ -1,7 +1,8 @@
 FROM openjdk:11-jdk-slim
 
-# Install Python and necessary tools
+# Install necessary dependencies for apt-get
 RUN apt-get update && \
+    apt-get install -y apt-transport-https ca-certificates && \
     apt-get install -y python3 python3-pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
