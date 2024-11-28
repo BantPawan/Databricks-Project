@@ -46,7 +46,7 @@ jobs:
       # (Optional) Verify Deployment
       - name: Verify Deployment
         run: |
-          APP_URL="54.88.171.149:8501"
+          APP_URL="http://54.88.171.149:8501"
           if curl --silent --fail "$APP_URL"; then
             echo "Streamlit App is live at $APP_URL"
           else
