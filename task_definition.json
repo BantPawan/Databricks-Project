@@ -1,0 +1,19 @@
+{
+  "family": "streamlit-task",
+  "containerDefinitions": [
+    {
+      "name": "streamlit-app",
+      "image": "970547346149.dkr.ecr.us-east-1.amazonaws.com/nyc-registry",
+      "cpu": 256,
+      "memory": 512,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8501,
+          "hostPort": 8501,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ]
+}
