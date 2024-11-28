@@ -11,10 +11,24 @@
       "portMappings": [
         {
           "containerPort": 8501,
-          "hostPort": 8501,
           "protocol": "tcp"
         }
-      ]
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8501/ || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/streamlit-task",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "streamlit"
+        }
+      }
     }
   ],
   "requiresCompatibilities": [
@@ -23,5 +37,5 @@
   "networkMode": "awsvpc",
   "cpu": "1024",
   "memory": "3072",
-  "executionRoleArn": "arn:aws:iam::970547346149:role/ecsTaskExecutionRole"
+  "executionRoleArn": "arn:aws:iam::978547346149:role/ecsTaskExecutionRole"
 }
