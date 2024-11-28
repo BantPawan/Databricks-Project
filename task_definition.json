@@ -3,9 +3,9 @@
   "containerDefinitions": [
     {
       "name": "streamlit-app",
-      "image": "970547346149.dkr.ecr.us-east-1.amazonaws.com/nyc-registry",
-      "cpu": 256,
-      "memory": 512,
+      "image": "978547346149.dkr.ecr.us-east-1.amazonaws.com/nyc-registry",
+      "cpu": 1024,
+      "memory": 3072,
       "essential": true,
       "portMappings": [
         {
@@ -15,5 +15,12 @@
         }
       ]
     }
-  ]
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "networkMode": "awsvpc",
+  "cpu": "1024",
+  "memory": "3072",
+  "executionRoleArn": "arn:aws:iam::970547346149:user/ecsTaskExecutionRole"
 }
