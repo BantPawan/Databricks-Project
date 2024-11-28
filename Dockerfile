@@ -18,4 +18,5 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 EXPOSE 8501
 
 # Command to run your Streamlit app
-CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+# Run the Streamlit app
+CMD ["streamlit", "run", "app.py", "--server.enableCORS", "false", "--server.port", "8501"]
