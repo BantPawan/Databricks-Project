@@ -38,7 +38,7 @@ jobs:
       - name: Deploy to AWS ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: task_definition.json
+          task-definition: ./task_definition.json
           service: nyc-streamlit-service
           cluster: nyc-streamlit-app
           wait-for-service-stability: true
