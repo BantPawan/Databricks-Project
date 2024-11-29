@@ -1,22 +1,24 @@
-FROM openjdk:11-jdk-slim
+FROM python:3.9-slim
 
-# Install necessary dependencies for apt-get
-RUN apt-get update && \
-    apt-get install -y apt-transport-https ca-certificates && \
-    apt-get install -y python3 python3-pip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install necessary system dependencies
+RUN apt-get update && apt-get install -y \
+    apt-transport-https \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Set the working directory
 WORKDIR /app
 
-# Copy application files
-COPY . /app
+# Copy only requirements first for caching
+COPY requirements.txt /app
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+# Copy the rest of the application files
+COPY . /app
+
 # Expose Streamlit port
 EXPOSE 8501
 
-# Command to run your Streamlit app
 # Run the Streamlit app
-CMD ["streamlit", "run", "app.py", "--server.enableCORS", "false", "--server.port", "8501"]
+CMD ["streamlit", "run", "app.py", "--server.enableCORS=false", "--server.port=8501"]
