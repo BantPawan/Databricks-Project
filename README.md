@@ -57,8 +57,9 @@ Techniques included:
 - A unified DataFrame was created by merging the results, and the average importance of each feature was computed.  
 - Key features identified included passenger count, payment type, trip duration, pickup day of the week, pickup hour, pickup month, pickup and dropoff boroughs, holiday indicators, distance bins, time-of-day classifications, and proximity to airports.  
 - The dataset was reduced to 13 essential features to streamline modeling and enhance computational efficiency.  
-- The final dataset consisted of **35,864,766 rows and 13 columns**, ensuring all necessary details for accurate fare predictions.  
+- The final dataset consisted of **35,864,766 rows and 13 columns**, ensuring all necessary details for accurate fare predictions.
 
+  ![IMG_20241130_125220](https://github.com/user-attachments/assets/16f15422-91cc-431f-982d-611409b6db6c) , ![IMG_20241130_123405](https://github.com/user-attachments/assets/e608ae83-181a-4de0-a98a-eb15548be379)
 ---
 
 ## Exploratory Data Analysis (EDA)  
