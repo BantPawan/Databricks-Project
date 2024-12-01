@@ -67,7 +67,10 @@ Techniques included:
 ### Univariate Analysis  
 - Analyzed distributions of `fare_amount`, `total_amount`, `passenger_count`, and `trip_distance` for skewness and outliers.  
 - Binned `trip_duration` into very low, low, and average categories for better interpretability.  
-- Addressed missing values, duplicates, and outliers to ensure data integrity.  
+- Addressed missing values, duplicates, and outliers to ensure data integrity.
+  ![IMG_20241130_124347](https://github.com/user-attachments/assets/6f77161a-a2ba-428e-b91e-2ec3ceef8461),![IMG_20241130_124404](https://github.com/user-attachments/assets/fdda8790-c98a-4539-9673-52b3c7b02ecb)
+
+
 
 ### Geospatial Analysis  
 - Explored pickup and dropoff boroughs to identify high-demand areas.  
@@ -77,7 +80,9 @@ Techniques included:
 - Studied average trip distances by day of the week and weekend vs weekday distributions.  
 - Examined monthly trip distributions, hourly pickup/dropoff trends, and zone-based insights.  
 - Visualized fare trends over different times and locations.
-- ![average trip by weekdays](https://github.com/user-attachments/assets/7588d89e-6422-4add-9bc3-0b8303bd1ee6),
+  ![average trip by weekdays](https://github.com/user-attachments/assets/7588d89e-6422-4add-9bc3-0b8303bd1ee6),
+  ![IMG_20241130_124418](https://github.com/user-attachments/assets/436a79dd-8f13-4750-8aec-964976b81712)
+
 
 
 ### Multivariate Analysis  
@@ -150,15 +155,24 @@ Several regression models were evaluated for their ability to predict NYC taxi f
 An interactive analytics dashboard was built to provide insights into NYC taxi fare trends.  
 
 Key visualizations included:  
-- **Heatmaps**: Visualizing fare distribution across NYC boroughs.  
+- **Heatmaps**: Visualizing fare distribution across NYC boroughs.
+- ![IMG_20241130_124206](https://github.com/user-attachments/assets/7292e9f2-f383-49ec-9c24-df5ff07d25cf),![IMG_20241130_124222](https://github.com/user-attachments/assets/786eb150-ded4-4725-b942-7ace545f849e)
 - **Scatter Plots**: Displaying correlations between trip distances, durations, and fares.  
-- **Box Plots**: Identifying fare distributions by passenger counts and trip types.  
-- **Line Plots**: Analyzing fare trends over time.  
+- **Box Plots**: Identifying fare distributions by passenger counts and trip types.
+ ![IMG_20241130_124330](https://github.com/user-attachments/assets/a0a2b1af-9e58-4d78-8066-621ddb03696f)
+- **Line Plots**: Analyzing fare trends over time.
+  ![IMG_20241130_124146](https://github.com/user-attachments/assets/5c3ca8ca-e683-4911-b1dd-a3326d1a40d2),![IMG_20241130_124128](https://github.com/user-attachments/assets/309b5d95-4ce0-4aec-a23f-3404311f297d),![IMG_20241130_124006](https://github.com/user-attachments/assets/ce9f5c44-97c5-4e12-aebd-ce90547f76fd),
+  ![IMG_20241130_123709](https://github.com/user-attachments/assets/5365b2ef-e8f9-4dca-8721-d317e9e02043)
+
+
+
+
 - **Weather Analysis**: Understanding the impact of weather conditions on fares.  
 - **Pie Charts**: Showing trip proportions by payment type and passenger count.
-  ![trip by time of day](https://github.com/user-attachments/assets/8cb9978e-307d-4e29-b156-a5a72172a75c),![trip by season](https://github.com/user-attachments/assets/3cea236e-d373-453a-ab0f-2466bc77b427)
-  ![temperature bin](https://github.com/user-attachments/assets/369b63cd-8323-498c-8a8e-3d84778647ce),![trip distace](https://github.com/user-attachments/assets/8b210475-9a57-4116-94a3-0aea28de0b9b)
-  ![airport](https://github.com/user-attachments/assets/361afe8b-1529-47f0-829a-ad071d557cc6)
+  ![trip by time of day](https://github.com/user-attachments/assets/8cb9978e-307d-4e29-b156-a5a72172a75c),![trip by season](https://github.com/user-attachments/assets/3cea236e-d373-453a-ab0f-2466bc77b427),
+  ![temperature bin](https://github.com/user-attachments/assets/369b63cd-8323-498c-8a8e-3d84778647ce),![trip distace](https://github.com/user-attachments/assets/8b210475-9a57-4116-94a3-0aea28de0b9b),
+  ![airport](https://github.com/user-attachments/assets/361afe8b-1529-47f0-829a-ad071d557cc6),
+![IMG_20241130_123820](https://github.com/user-attachments/assets/6d2c72da-6383-4914-ac5b-6e1ca574e4a1)
 
   
 
