@@ -83,9 +83,7 @@ Techniques included:
 ### Multivariate Analysis  
 - Investigated the relationship between trip distance, trip duration, and fare amount.  
 - Analyzed the effect of payment types on fares and passenger counts.
-  ![IMG_20241130_124027](https://github.com/user-attachments/assets/d9ea4fdb-f6ed-4544-901b-1418834682d4),![distance by week](https://github.com/user-attachments/assets/165dde84-c6de-44bb-ac21-934126268070),![IMG_20241130_124314](https://github.com/user-attachments/assets/eab8b079-5cb3-4ff8-9ea6-ec1238667f6a),![IMG_20241130_124256](https://github.com/user-attachments/assets/13b79de3-7327-46b1-bcdd-67b451d25eba)
-
-
+  ![IMG_20241130_124027](https://github.com/user-attachments/assets/d9ea4fdb-f6ed-4544-901b-1418834682d4),![distance by week](https://github.com/user-attachments/assets/165dde84-c6de-44bb-ac21-934126268070),![IMG_20241130_124314](https://github.com/user-attachments/assets/eab8b079-5cb3-4ff8-9ea6-ec1238667f6a),![IMG_20241130_124256](https://github.com/user-attachments/assets/13b79de3-7327-46b1-bcdd-67b451d25eba),![IMG_20241130_124044](https://github.com/user-attachments/assets/6cbb2792-5e47-4b26-90b9-bdbb85d6cc4b)
 
 
 ### Weather and Holiday Impacts  
