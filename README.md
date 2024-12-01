@@ -76,11 +76,17 @@ Techniques included:
 ### Temporal Patterns  
 - Studied average trip distances by day of the week and weekend vs weekday distributions.  
 - Examined monthly trip distributions, hourly pickup/dropoff trends, and zone-based insights.  
-- Visualized fare trends over different times and locations.  
+- Visualized fare trends over different times and locations.
+- ![average trip by weekdays](https://github.com/user-attachments/assets/7588d89e-6422-4add-9bc3-0b8303bd1ee6),
+
 
 ### Multivariate Analysis  
 - Investigated the relationship between trip distance, trip duration, and fare amount.  
-- Analyzed the effect of payment types on fares and passenger counts.  
+- Analyzed the effect of payment types on fares and passenger counts.
+  ![IMG_20241130_124027](https://github.com/user-attachments/assets/d9ea4fdb-f6ed-4544-901b-1418834682d4),![distance by week](https://github.com/user-attachments/assets/165dde84-c6de-44bb-ac21-934126268070),![IMG_20241130_124314](https://github.com/user-attachments/assets/eab8b079-5cb3-4ff8-9ea6-ec1238667f6a),![IMG_20241130_124256](https://github.com/user-attachments/assets/13b79de3-7327-46b1-bcdd-67b451d25eba)
+
+
+
 
 ### Weather and Holiday Impacts  
 - Explored the influence of temperature on fares.  
