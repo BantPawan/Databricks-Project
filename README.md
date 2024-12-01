@@ -3,6 +3,11 @@
 ## Capstone Project Overview  
 
 This capstone project focuses on applying advanced data science techniques to predict taxi fare prices in New York City. By leveraging large-scale datasets, this project generates accurate fare predictions based on various factors such as pickup/dropoff locations, time, passenger count, and external variables like weather conditions. The project follows a structured approach, from data ingestion and preprocessing to model development and deployment. The final output is an interactive, user-friendly web application that provides real-time fare predictions, offering insights into how different factors influence taxi fares in NYC.  
+![1](https://github.com/user-attachments/assets/fc0592fe-7c94-4f47-8288-4395e4c782b4),![2](https://github.com/user-attachments/assets/49367c6f-aaed-4361-8515-1981fdab0994),![3](https://github.com/user-attachments/assets/ead8e702-e636-4d65-bdd3-a30575fbd9da)
+
+
+
+
 
 ---
 
