@@ -84,7 +84,7 @@ Techniques included:
 
 ### Weather and Holiday Impacts  
 - Explored the influence of temperature on fares.  
-- Analyzed holiday trip patterns to identify unique travel behaviors.  
+- Analyzed holiday trip patterns to identify unique travel behaviors.
 
 This structured EDA phase revealed critical insights into the dataset’s structure, trends, and relationships, paving the way for robust feature engineering and model development.  
 
@@ -151,8 +151,18 @@ Key visualizations included:
 - **Box Plots**: Identifying fare distributions by passenger counts and trip types.  
 - **Line Plots**: Analyzing fare trends over time.  
 - **Weather Analysis**: Understanding the impact of weather conditions on fares.  
-- **Pie Charts**: Showing trip proportions by payment type and passenger count.  
+- **Pie Charts**: Showing trip proportions by payment type and passenger count.
+  ![trip by time of day](https://github.com/user-attachments/assets/8cb9978e-307d-4e29-b156-a5a72172a75c),![trip by season](https://github.com/user-attachments/assets/3cea236e-d373-453a-ab0f-2466bc77b427)
+  ![temperature bin](https://github.com/user-attachments/assets/369b63cd-8323-498c-8a8e-3d84778647ce),![trip distace](https://github.com/user-attachments/assets/8b210475-9a57-4116-94a3-0aea28de0b9b)
+  ![airport](https://github.com/user-attachments/assets/361afe8b-1529-47f0-829a-ad071d557cc6)
 
+  
+
+
+  
+
+
+  
 ---
 
 ## Technologies Used  
