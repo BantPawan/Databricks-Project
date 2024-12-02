@@ -131,7 +131,9 @@ Several regression models were evaluated for their ability to predict NYC taxi f
 - Linear Regression: Regularization parameters (e.g., L1/L2).  
 - Decision Tree: Max depth, minimum samples split.  
 - Random Forest: Number of trees, max depth, and feature sampling.  
-- Gradient Boosted Trees: Learning rate, number of iterations, tree depth.  
+- Gradient Boosted Trees: Learning rate, number of iterations, tree depth.
+  ![4](https://github.com/user-attachments/assets/8058b2eb-7687-455f-9f56-6773607f09d7)
+
 
 ---
 
