@@ -1,4 +1,4 @@
-# NYC Taxi Fare Price Prediction  
+#Taxi Fare Price Prediction  
 
 ## Capstone Project Overview  
 
